@@ -15,12 +15,12 @@ class SentenceBERT:
         self.sep = sep
         
         if isinstance(model_path, str):
-            self.q_model = SentenceTransformer(model_path)
+            self.q_model = SentenceTransformer(model_path, **kwargs)
             self.doc_model = self.q_model
         
         elif isinstance(model_path, tuple):
-            self.q_model = SentenceTransformer(model_path[0])
-            self.doc_model = SentenceTransformer(model_path[1])
+            self.q_model = SentenceTransformer(model_path[0], **kwargs)
+            self.doc_model = SentenceTransformer(model_path[1], **kwargs)
     
     def start_multi_process_pool(self, target_devices: List[str] = None) -> Dict[str, object]:
         logger.info("Start multi-process pool on devices: {}".format(', '.join(map(str, target_devices))))

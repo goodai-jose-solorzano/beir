@@ -22,10 +22,13 @@ setup(
     python_requires='>=3.6',
     install_requires=[
         'sentence-transformers',
-        'pytrec_eval',
+        'pytrec_eval_terrier',
         'faiss_cpu',
         'elasticsearch==7.9.1',
-        'datasets'
+        'datasets',
+        'idna',
+        'joblib',
+        'Pillow',
     ],
     extras_require = optional_packages,
     classifiers=[
