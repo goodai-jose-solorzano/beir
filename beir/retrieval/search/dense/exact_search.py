@@ -1,4 +1,4 @@
-from .util import cos_sim, dot_score
+from .util import cos_sim, dot_score, cos_sim_multiple
 import logging
 import sys
 import torch
@@ -13,8 +13,10 @@ class DenseRetrievalExactSearch:
         #model is class that provides encode_corpus() and encode_queries()
         self.model = model
         self.batch_size = batch_size
-        self.score_functions = {'cos_sim': cos_sim, 'dot': dot_score}
-        self.score_function_desc = {'cos_sim': "Cosine Similarity", 'dot': "Dot Product"}
+        self.score_functions = {'cos_sim': cos_sim, 'dot': dot_score,
+                                'cos_sim_multiple': cos_sim_multiple}
+        self.score_function_desc = {'cos_sim': "Cosine Similarity", 'dot': "Dot Product",
+                                    "cos_sim_multiple": "Cosine Similarity (Multiple)"}
         self.corpus_chunk_size = corpus_chunk_size
         self.show_progress_bar = True #TODO: implement no progress bar if false
         self.convert_to_tensor = True

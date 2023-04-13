@@ -2,6 +2,7 @@ import torch
 import numpy as np
 import csv
 
+
 def cos_sim(a: torch.Tensor, b: torch.Tensor):
     """
     Computes the cosine similarity cos_sim(a[i], b[j]) for all i and j.
@@ -22,6 +23,35 @@ def cos_sim(a: torch.Tensor, b: torch.Tensor):
     a_norm = torch.nn.functional.normalize(a, p=2, dim=1)
     b_norm = torch.nn.functional.normalize(b, p=2, dim=1)
     return torch.mm(a_norm, b_norm.transpose(0, 1)) #TODO: this keeps allocating GPU memory
+
+
+def cos_sim_multiple(a: torch.Tensor, b: torch.Tensor):
+    """
+    Computes the cosine similarity cos_sim(a[i], b[j]) for all i and j.
+    Tensors a and b are expected to have shape (batch_size, num_emb, emb_dim,)
+    The number of embeddings of a and b may be different
+    :return: Matrix with res[i][j]  = cos_sim(a[i], b[j])
+    """
+    if not isinstance(a, torch.Tensor):
+        a = torch.tensor(a)
+
+    if not isinstance(b, torch.Tensor):
+        b = torch.tensor(b)
+
+    if len(a.shape) != 3 or len(b.shape) != 3:
+        raise ValueError('Expected tensors with 3 axes')
+
+    batch_size = a.size(0)
+    num_a_emb = a.size(1)
+    num_b_emb = b.size(1)
+    a_norm = torch.nn.functional.normalize(a, p=2, dim=2)
+    b_norm = torch.nn.functional.normalize(b, p=2, dim=2)
+    product = a_norm[:, :, None, :] * b_norm[:, None, :, :]
+    # product: (batch_size, num_a_emb, num_b_emb, emb_dim)
+    dot_product = torch.sum(product, dim=3)
+    dot_product = dot_product.view(batch_size, num_a_emb * num_b_emb)
+    return torch.max(dot_product, dim=1, keepdim=True)
+
 
 def dot_score(a: torch.Tensor, b: torch.Tensor):
     """

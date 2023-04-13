@@ -33,10 +33,11 @@ corpus, queries, qrels = GenericDataLoader(data_folder=data_path).load(split="te
 #### Load the SBERT model and retrieve using cosine-similarity
 # model = SentenceBERT('sentence-transformers/all-distilroberta-v1', device=str(_device))
 model = SentenceBERT('sentence-transformers/all-mpnet-base-v2', device=str(_device))
-dres = DRES(model, batch_size=16)
-retriever = EvaluateRetrieval(dres, score_function="dot") # or "cos_sim" for cosine similarity
+dres = DRES(model, batch_size=32)
+retriever = EvaluateRetrieval(dres, score_function="cos_sim_multiple") # or "cos_sim" for cosine similarity
 results = retriever.retrieve(corpus, queries)
 
 #### Evaluate your model with NDCG@k, MAP@K, Recall@K and Precision@K  where k = [1,3,5,10,100,1000]
 ndcg, _map, recall, precision = retriever.evaluate(qrels, results, retriever.k_values)
 
+print(f'NDCG={ndcg}')
