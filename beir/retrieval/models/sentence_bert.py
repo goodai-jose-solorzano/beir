@@ -1,3 +1,4 @@
+import torch
 from sentence_transformers import SentenceTransformer
 from torch import Tensor
 import torch.multiprocessing as mp
@@ -11,9 +12,10 @@ logger = logging.getLogger(__name__)
 
 
 class SentenceBERT:
-    def __init__(self, model_path: Union[str, Tuple] = None, sep: str = " ", **kwargs):
+    def __init__(self, model_path: Union[str, Tuple] = None, sep: str = " ",
+                 multi_emb: bool = False, **kwargs):
+        self.multi_emb = multi_emb
         self.sep = sep
-        
         if isinstance(model_path, str):
             self.q_model = SentenceTransformer(model_path, **kwargs)
             self.doc_model = self.q_model
@@ -43,14 +45,20 @@ class SentenceBERT:
         return self.doc_model.stop_multi_process_pool(pool)
 
     def encode_queries(self, queries: List[str], batch_size: int = 16, **kwargs) -> Union[List[Tensor], np.ndarray, Tensor]:
-        return self.q_model.encode(queries, batch_size=batch_size, **kwargs)
+        emb = self.q_model.encode(queries, batch_size=batch_size, **kwargs)
+        if self.multi_emb:
+            emb = emb.unsqueeze(1)
+        return emb
     
     def encode_corpus(self, corpus: Union[List[Dict[str, str]], Dict[str, List]], batch_size: int = 8, **kwargs) -> Union[List[Tensor], np.ndarray, Tensor]:
         if type(corpus) is dict:
             sentences = [(corpus["title"][i] + self.sep + corpus["text"][i]).strip() if "title" in corpus else corpus["text"][i].strip() for i in range(len(corpus['text']))]
         else:
             sentences = [(doc["title"] + self.sep + doc["text"]).strip() if "title" in doc else doc["text"].strip() for doc in corpus]
-        return self.doc_model.encode(sentences, batch_size=batch_size, **kwargs)
+        emb = self.doc_model.encode(sentences, batch_size=batch_size, **kwargs)
+        if self.multi_emb:
+            emb = emb.unsqueeze(1)
+        return emb
 
     ## Encoding corpus in parallel
     def encode_corpus_parallel(self, corpus: Union[List[Dict[str, str]], Dataset], pool: Dict[str, str], batch_size: int = 8, chunk_id: int = None, **kwargs):
